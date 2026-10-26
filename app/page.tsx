@@ -1,9 +1,9 @@
-import Providers from './providers'
+import Header from '../components/header'
 
 export default function Home() {
   return (
     <div>
-        <Providers/>
+      <Header/>
     </div>
   );
 }
