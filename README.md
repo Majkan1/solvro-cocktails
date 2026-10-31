@@ -1,36 +1,65 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Solvro Cocktails
 
-## Getting Started
+A web app for browsing cocktails, built as the recruitment task for the **KN Solvro** Frontend section.
+Data comes from the [Solvro Cocktails API](https://cocktails.solvro.pl).
 
-First, run the development server:
+**Live demo:** https://solvro-cocktails-app.vercel.app
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## Features
+
+- Cocktail list with images, category and alcoholic / non-alcoholic label
+- Pagination based on the API `meta` (each page cached separately)
+- Cocktail details page (`/cocktails/[id]`) with glass, instructions and **ingredients with measures**
+- Favorites – add / remove cocktails, saved in `localStorage` (survives page refresh)
+- Loading and error states
+- Responsive, mobile-first grid
+
+## Tech stack
+
+| | |
+|---|---|
+| Framework | [Next.js 16](https://nextjs.org) (App Router) |
+| Language | TypeScript |
+| Server state | [TanStack Query](https://tanstack.com/query) |
+| Client state | [Jotai](https://jotai.org) |
+| UI | [shadcn/ui](https://ui.shadcn.com) + Tailwind CSS 4 |
+| Deployment | Vercel |
+
+## Technical decisions
+
+- **TanStack Query instead of `useEffect` + `useState`** – caching, loading/error states and request deduplication out of the box. The page number is part of the `queryKey`, so changing the page fetches new data and going back is instant.
+- **Typed API layer** (`lib/api.ts`) – generic `PaginatedResponse<T>` for list endpoints and a separate response type for a single cocktail, so components never work with `any`.
+- **Server page + client component** – `app/cocktails/[id]/page.tsx` only wraps the client `CocktailDetails` component in `<Suspense>`, which reads the route param with `useParams` and fetches data with TanStack Query.
+- **Favorites with Jotai `atomWithStorage`** – a global atom holding an array of cocktail ids, persisted in `localStorage`; updated immutably (`filter` / spread) so React re-renders correctly.
+- **List fetches no ingredients** – ingredients are loaded only on the details page, so the list needs a single request per page.
+
+## Project structure
+
+```
+app/
+  page.tsx               # home page – cocktail list
+  cocktails/[id]/page.tsx  # details page
+  providers.tsx          # TanStack Query provider
+components/
+  cocktail-list.tsx
+  cocktail-details.tsx
+  header.tsx
+  types.ts               # API types
+  ui/                    # shadcn/ui components
+lib/
+  api.ts                 # API fetchers
+  atoms.ts               # Jotai atoms (favorites)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Getting started
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm install
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Open [http://localhost:3000](http://localhost:3000).
 
-## Learn More
+## Author
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Mikołaj Michalak – [GitHub](https://github.com/Majkan1) · [mikolajmichalak.dev](https://mikolajmichalak.dev)

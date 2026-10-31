@@ -7,9 +7,12 @@ import Image from "next/image";
 import { Card,CardHeader, CardContent, CardFooter } from "./ui/card";
 import { Button } from "./ui/button"
 import Link from "next/link";
+import { useAtom } from "jotai/react";
+import { favouritesAtom } from "@/lib/atoms";
 
 export default function CocktailList(){
   const [page,setPage] = useState(1);
+  const [favourites,setFavourites] = useAtom(favouritesAtom)
   const {data,isPending,isError,error} = useQuery({
     queryKey:["cocktails",page],
     queryFn: ()=> getCocktails(page),
@@ -42,7 +45,18 @@ export default function CocktailList(){
                 <Image src={cocktail.imageUrl} alt={cocktail.name} width={200} height={200}/>
               </CardContent>
               <CardFooter>
-                <button> Add to favourites </button>
+                <Button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setFavourites(
+                      favourites.includes(cocktail.id)
+                        ? favourites.filter((id) => id !== cocktail.id)
+                        : [...favourites, cocktail.id]
+                    );
+                  }}
+                  >
+                  {favourites.includes(cocktail.id) ? "Remove from favourites" : "Add to favourites"}
+                </Button>
               </CardFooter>
             </Link>
           </Card>
