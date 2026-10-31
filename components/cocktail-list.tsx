@@ -1,5 +1,4 @@
 "use client"
-import { useState } from "react";
 import { useQuery,keepPreviousData } from "@tanstack/react-query";
 import  getCocktails  from "@/lib/api";
 import { Cocktail } from "./types";
@@ -8,18 +7,20 @@ import { Card,CardHeader, CardContent, CardFooter } from "./ui/card";
 import { Button } from "./ui/button"
 import Link from "next/link";
 import { useAtom } from "jotai/react";
-import { favouritesAtom } from "@/lib/atoms";
+import { favouritesAtom, pageAtom, searchAtom } from "@/lib/atoms";
 
 export default function CocktailList(){
-  const [page,setPage] = useState(1);
+  const [page,setPage] = useAtom(pageAtom);
+  const [search] = useAtom(searchAtom);
   const [favourites,setFavourites] = useAtom(favouritesAtom)
   const {data,isPending,isError,error} = useQuery({
-    queryKey:["cocktails",page],
-    queryFn: ()=> getCocktails(page),
+    queryKey:["cocktails",page,search],
+    queryFn: ()=> getCocktails(page,search),
   });
 
   if(isPending) return <p> Loading ...</p>
   if (isError) return <p>Error: {error.message}</p>
+  if(data.data.length === 0) return <p>No cocktails found</p>
 
   return(
     <div>
