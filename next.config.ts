@@ -5,6 +5,9 @@ const nextConfig: NextConfig = {
   experimental: {
     agentFeedback: true,
   },
+  images: {
+  remotePatterns: [{ protocol: "https", hostname: "cocktails.solvro.pl" }],
+  },
   cacheComponents: true,
   partialPrefetching: true,
   turbopack: {
