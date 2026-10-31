@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useAtom, useAtomValue } from "jotai/react";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import Image from "next/image";
 import Link from "next/link";
@@ -10,14 +10,20 @@ import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Skeleton } from "./ui/skeleton";
 import FavouriteButton from "./favourite-button";
+import { alcoholFilterAtom, pageAtom, searchAtom } from "@/lib/atoms";
+import { useDebouncedValue } from "@/hooks/use-debounced-value";
 
 const GRID = "grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4";
 
 export default function CocktailList() {
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useAtom(pageAtom);
+  const search = useDebouncedValue(useAtomValue(searchAtom).trim());
+  const alcoholFilter = useAtomValue(alcoholFilterAtom);
+  const alcoholic = alcoholFilter === "all" ? undefined : alcoholFilter === "alcoholic";
+
   const { data, isPending, isError, error } = useQuery({
-    queryKey: ["cocktails", page],
-    queryFn: () => getCocktails(page),
+    queryKey: ["cocktails", { page, search, alcoholic }],
+    queryFn: () => getCocktails({ page, search, alcoholic }),
     placeholderData: keepPreviousData,
   });
 
@@ -33,6 +39,10 @@ export default function CocktailList() {
 
   if (isError) {
     return <p className="text-center text-destructive">Error: {error.message}</p>;
+  }
+
+  if (data.data.length === 0) {
+    return <p className="py-16 text-center text-muted-foreground">No cocktails found. Try a different name or filter.</p>;
   }
 
   return (
@@ -81,7 +91,7 @@ export default function CocktailList() {
         <Button
           variant="outline"
           onClick={() => setPage((p) => p + 1)}
-          disabled={page === data.meta.lastPage}
+          disabled={page >= data.meta.lastPage}
         >
           Next →
         </Button>

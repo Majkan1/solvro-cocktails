@@ -8,6 +8,8 @@ Data comes from the [Solvro Cocktails API](https://cocktails.solvro.pl).
 ## Features
 
 - Cocktail list with images, category and alcoholic / non-alcoholic label
+- Search by name (debounced, server-side `name=%…%` filter)
+- Filter: all / alcoholic / non-alcoholic (server-side)
 - Pagination based on the API `meta` (each page cached separately)
 - Cocktail details page (`/cocktails/[id]`) with glass, instructions and **ingredients with measures**
 - Favorites – add / remove cocktails, saved in `localStorage` (survives page refresh)
@@ -31,6 +33,7 @@ Data comes from the [Solvro Cocktails API](https://cocktails.solvro.pl).
 - **Typed API layer** (`lib/api.ts`) – generic `PaginatedResponse<T>` for list endpoints and a separate response type for a single cocktail, so components never work with `any`.
 - **Server page + client component** – `app/cocktails/[id]/page.tsx` only wraps the client `CocktailDetails` component in `<Suspense>`, which reads the route param with `useParams` and fetches data with TanStack Query.
 - **Favorites with Jotai `atomWithStorage`** – a global atom holding an array of cocktail ids, persisted in `localStorage`; updated immutably (`filter` / spread) so React re-renders correctly.
+- **Filters as part of the `queryKey`** – search text (debounced 300 ms with a small `useDebouncedValue` hook), type filter and page live in Jotai atoms; changing any of them creates a new query key, so TanStack Query fetches and caches each combination. Changing a filter resets the page to 1.
 - **List fetches no ingredients** – ingredients are loaded only on the details page, so the list needs a single request per page.
 
 ## Project structure
@@ -46,9 +49,11 @@ components/
   header.tsx
   types.ts               # API types
   ui/                    # shadcn/ui components
+hooks/
+  use-debounced-value.ts # debounce hook for search
 lib/
   api.ts                 # API fetchers
-  atoms.ts               # Jotai atoms (favorites)
+  atoms.ts               # Jotai atoms (favourites, search, filter, page)
 ```
 
 ## Getting started
