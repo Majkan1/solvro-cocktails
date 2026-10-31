@@ -1,101 +1,63 @@
-"use client";
-
-import { useAtom, useAtomValue } from "jotai/react";
-import { useQuery, keepPreviousData } from "@tanstack/react-query";
+"use client"
+import { useQuery } from "@tanstack/react-query";
+import  getCocktails  from "@/lib/api";
+import { Cocktail } from "./types";
 import Image from "next/image";
-import Link from "next/link";
-import getCocktails from "@/lib/api";
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "./ui/card";
+import { Card,CardHeader,CardTitle, CardContent, CardFooter } from "./ui/card";
+import { Button } from "./ui/button"
 import { Badge } from "./ui/badge";
-import { Button } from "./ui/button";
-import { Skeleton } from "./ui/skeleton";
-import FavouriteButton from "./favourite-button";
-import { alcoholFilterAtom, pageAtom, searchAtom } from "@/lib/atoms";
-import { useDebouncedValue } from "@/hooks/use-debounced-value";
+import Link from "next/link";
+import { useAtom } from "jotai/react";
+import { favouritesAtom, pageAtom, searchAtom } from "@/lib/atoms";
 
-const GRID = "grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4";
-
-export default function CocktailList() {
-  const [page, setPage] = useAtom(pageAtom);
-  const search = useDebouncedValue(useAtomValue(searchAtom).trim());
-  const alcoholFilter = useAtomValue(alcoholFilterAtom);
-  const alcoholic = alcoholFilter === "all" ? undefined : alcoholFilter === "alcoholic";
-
-  const { data, isPending, isError, error } = useQuery({
-    queryKey: ["cocktails", { page, search, alcoholic }],
-    queryFn: () => getCocktails({ page, search, alcoholic }),
-    placeholderData: keepPreviousData,
+export default function CocktailList(){
+  const [page,setPage] = useAtom(pageAtom);
+  const [search] = useAtom(searchAtom);
+  const [favourites,setFavourites] = useAtom(favouritesAtom)
+  const {data,isPending,isError,error} = useQuery({
+    queryKey:["cocktails",page,search],
+    queryFn: ()=> getCocktails(page,search),
   });
 
-  if (isPending) {
-    return (
-      <div className={GRID}>
-        {Array.from({ length: 8 }, (_, i) => (
-          <Skeleton key={i} className="aspect-[3/4] w-full rounded-xl" />
-        ))}
-      </div>
-    );
-  }
+  if(isPending) return <p className="text-center"> Loading ...</p>
+  if (isError) return <p className="text-center">Error: {error.message}</p>
+  if(data.data.length === 0) return <p className="text-center">No cocktails found</p>
 
-  if (isError) {
-    return <p className="text-center text-destructive">Error: {error.message}</p>;
-  }
-
-  if (data.data.length === 0) {
-    return <p className="py-16 text-center text-muted-foreground">No cocktails found. Try a different name or filter.</p>;
-  }
-
-  return (
-    <section>
-      <div className={GRID}>
-        {data.data.map((cocktail) => (
-          <Link
-            key={cocktail.id}
-            href={`/cocktails/${cocktail.id}`}
-            className="group rounded-xl focus-visible:outline-2 focus-visible:outline-ring"
-          >
-            <Card className="h-full overflow-hidden pt-0 transition-shadow group-hover:shadow-lg">
-              <div className="relative aspect-square w-full bg-muted">
-                <Image
-                  src={cocktail.imageUrl}
-                  alt={cocktail.name}
-                  fill
-                  sizes="(min-width: 1280px) 25vw, (min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-                  className="object-cover transition-transform duration-300 group-hover:scale-105"
-                />
-              </div>
+  return(
+    <div>
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {data.data.map((cocktail:Cocktail) => 
+          <Link key={cocktail.id} href={`/cocktails/${cocktail.id}`}>
+            <Card className="h-full overflow-hidden pt-0 hover:shadow-lg">
+              <Image src={cocktail.imageUrl} alt={cocktail.name} width={400} height={400} className="w-full h-auto"/>
               <CardHeader>
                 <CardTitle className="text-lg">{cocktail.name}</CardTitle>
               </CardHeader>
               <CardContent className="flex flex-wrap gap-2">
-                <Badge variant={cocktail.alcoholic ? "default" : "secondary"}>
-                  {cocktail.alcoholic ? "Alcoholic" : "Non-alcoholic"}
-                </Badge>
+                <Badge>{cocktail.alcoholic?"Alcoholic":"Non-alcoholic"}</Badge>
                 <Badge variant="outline">{cocktail.category}</Badge>
               </CardContent>
               <CardFooter className="mt-auto">
-                <FavouriteButton cocktailId={cocktail.id} className="w-full" />
+                <Button className="w-full" variant="outline" onClick={(e)=>{
+                  e.preventDefault();
+                  setFavourites(favourites.includes(cocktail.id)?favourites.filter((id)=> id !== cocktail.id):[...favourites,cocktail.id])
+                }}>
+                  {favourites.includes(cocktail.id)?"Remove from favourites":"Add to favourites"}
+                </Button>
               </CardFooter>
             </Card>
           </Link>
-        ))}
+        )}
       </div>
-
-      <nav className="mt-10 flex items-center justify-center gap-4" aria-label="Pagination">
-        <Button variant="outline" onClick={() => setPage((p) => p - 1)} disabled={page === 1}>
-          ← Previous
+      <div className="flex justify-center items-center gap-4 mt-10">
+        <Button variant="outline" onClick={()=>setPage(p=>p-1)} disabled={page===1}>
+          Previous
         </Button>
-        <span className="text-sm text-muted-foreground">
-          Page {page} of {data.meta.lastPage}
-        </span>
-        <Button
-          variant="outline"
-          onClick={() => setPage((p) => p + 1)}
-          disabled={page >= data.meta.lastPage}
-        >
-          Next →
+        <p>Page {page} of {data.meta.lastPage}</p>
+        <Button variant="outline" onClick={()=>setPage(p=>p+1)} disabled={page === data.meta.lastPage}>
+          Next
         </Button>
-      </nav>
-    </section>
-  );
+      </div>
+    </div>
+  )
 }
