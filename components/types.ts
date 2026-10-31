@@ -20,7 +20,7 @@ export type Ingredient = {
     imageUrl:string,
     createdAt:string
     updatedAt:string,
-    measure:string | null,
+    measure:string,
 }
 
 export type CocktailWithIngredients =  Cocktail & {
