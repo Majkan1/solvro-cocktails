@@ -65,7 +65,7 @@ export default function CocktailDetails() {
             {cocktail.ingredients.map((ingredient) => (
               <li key={ingredient.id} className="flex justify-between gap-4 px-4 py-2">
                 <span>{ingredient.name}</span>
-                <span className="text-muted-foreground">{ingredient.measure.trim()}</span>
+                <span className="text-muted-foreground">{ingredient.measure?.trim()}</span>
               </li>
             ))}
           </ul>
