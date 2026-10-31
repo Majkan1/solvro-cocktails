@@ -35,7 +35,7 @@ export default function CocktailDetails(){
               {data.data.ingredients.map((ingredient)=>(
                 <div key={ingredient.id}>
                   <p>{ingredient.name}</p>
-                  <p>{ingredient.measure.trim()}</p>
+                  <p>{ingredient.measure?.trim()}</p>
                 </div>
               ))}
             </CardContent>
