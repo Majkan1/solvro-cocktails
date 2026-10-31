@@ -46,17 +46,11 @@ export default function CocktailList(){
                 <Image src={cocktail.imageUrl} alt={cocktail.name} width={200} height={200}/>
               </CardContent>
               <CardFooter>
-                <Button
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setFavourites(
-                      favourites.includes(cocktail.id)
-                        ? favourites.filter((id) => id !== cocktail.id)
-                        : [...favourites, cocktail.id]
-                    );
-                  }}
-                  >
-                  {favourites.includes(cocktail.id) ? "Remove from favourites" : "Add to favourites"}
+                <Button onClick={(e)=>{
+                  e.preventDefault();
+                  setFavourites(favourites.includes(cocktail.id)?favourites.filter((id)=> id !== cocktail.id):[...favourites,cocktail.id])
+                }}>
+                  {favourites.includes(cocktail.id)?"Remove from favourites":"Add to favourites"}
                 </Button>
               </CardFooter>
             </Link>
